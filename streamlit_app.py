@@ -3,7 +3,6 @@ import pandas as pd
 import plotly.express as px
 
 # Load the CSV data
-# data = pd.read_csv('./parsed_chat_박흥순_0817.csv')
 data = pd.read_excel('./parsed_chat_홍경태.xlsx')
 data['날짜'] = pd.to_datetime(data['날짜'], format='%Y년 %m월 %d일').dt.date
 data['메시지'] = data['메시지'].replace("\n\n", "\n", regex=True).replace("\n", "<br>", regex=True)
