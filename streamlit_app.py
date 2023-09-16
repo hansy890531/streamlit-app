@@ -48,7 +48,7 @@ st.markdown("""
 box_layout_css = """
     <style>
         .stat-box {
-            background-color: #F0F2F6;
+            # background-color: #F0F2F6;
             padding: 20px;
             border-radius: 5px;
             text-align: center;
