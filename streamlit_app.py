@@ -7,6 +7,7 @@ if 'user_data' not in st.session_state:
 
 # JavaScript 코드 삽입
 html_code = """
+    <div id="div"></div>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         window.onload = function() {
