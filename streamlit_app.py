@@ -53,17 +53,17 @@ class UserManager:
         users_worksheet = self.sheets_manager.get_worksheet("Users")
         users_data = users_worksheet.get_all_values()
         users_df = pd.DataFrame(users_data[1:], columns=users_data[0])
-        return user_id in users_df['TelegramID'].values
+        return str(user_id) in users_df['TelegramID'].astype(str).values
 
     def add_user_if_not_exists(self, user_data: Dict[str, Any]):
         users_worksheet = self.sheets_manager.get_worksheet("Users")
         users_data = users_worksheet.get_all_values()
         users_df = pd.DataFrame(users_data[1:], columns=users_data[0])
         
-        if user_data['id'] not in users_df['TelegramID'].values:
-            new_row = [user_data['id'], user_data['username'], user_data['first_name'], user_data['last_name']]
+        if str(user_data['id']) not in users_df['TelegramID'].astype(str).values:
+            new_row = [user_data['id'], user_data.get('username', ''), user_data.get('first_name', ''), user_data.get('last_name', '')]
             users_worksheet.append_row(new_row)
-            logger.info(f"새 사용자 추가됨: {user_data['username']}")
+            logger.info(f"새 사용자 추가됨: {user_data.get('username', 'Unknown')}")
 
 class ReservationManager:
     def __init__(self, sheets_manager: GoogleSheetsManager):
@@ -130,6 +130,11 @@ class ReservationManager:
 def main():
     st.set_page_config(page_title="설명회 예약 시스템", layout="wide")
     
+    if 'user_data' not in st.session_state:
+        st.session_state.user_data = None
+    if 'logged_in' not in st.session_state:
+        st.session_state.logged_in = False
+    
     # Telegram WebApp API 스크립트 추가
     html("""
         <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -166,29 +171,32 @@ def main():
     reservation_manager = ReservationManager(sheets_manager)
 
     # 사용자 정보 받기 및 자동 로그인
-    if 'user_data' not in st.session_state:
-        user_data_raw = st.query_params.get("streamlit:componentValue")
-        if user_data_raw:
+    user_data_raw = st.query_params.get("streamlit:componentValue")
+    if user_data_raw:
+        try:
             user_data = json.loads(user_data_raw)
             st.session_state.user_data = user_data
             user_manager.add_user_if_not_exists(user_data)
             if user_manager.verify_user(user_data['id']):
                 st.session_state.logged_in = True
-                logger.info(f"사용자 자동 로그인 성공: {user_data['username']}")
+                logger.info(f"사용자 자동 로그인 성공: {user_data.get('username', 'Unknown')}")
             else:
                 st.session_state.logged_in = False
-                logger.warning(f"未승인 사용자 접근: {user_data['username']}")
-        else:
+                logger.warning(f"未승인 사용자 접근: {user_data.get('username', 'Unknown')}")
+        except json.JSONDecodeError:
+            logger.error("사용자 데이터 파싱 실패")
             st.session_state.logged_in = False
+    else:
+        if not st.session_state.get('logged_in', False):
             logger.warning("사용자 정보를 가져올 수 없습니다.")
 
-    st.session_state.logged_in = True
-
-    
     # 메인 애플리케이션 (로그인 성공 시에만 표시)
     if st.session_state.get('logged_in', False):
         st.title("설명회 예약 시스템")
-        st.write(f"환영합니다, {st.session_state.user_data['first_name']} {st.session_state.user_data['last_name']}님!")
+        if st.session_state.user_data:
+            st.write(f"환영합니다, {st.session_state.user_data.get('first_name', '')} {st.session_state.user_data.get('last_name', '')}님!")
+        else:
+            st.write("환영합니다!")
 
         tab1, tab2, tab3 = st.tabs(["예약하기", "예약 수정", "예약 취소"])
 
@@ -281,24 +289,37 @@ def main():
 
         with tab3:
             st.header("예약 취소")
-            reservation_id_to_cancel = st.text_input("취소할 예약 번호를 입력하세요")
-            # 기존 예약 조회
-            if st.button("내 예약 조회"):
-                logger.info("기존 예약 조회 버튼 클릭됨")
-                try:
-                    user_reservations = reservation_manager.get_user_reservations(st.session_state.user_data['id'])
-                    if user_reservations.empty:
-                        logger.warning("예약 정보 없음")
-                        st.warning('예약 정보가 없습니다.')
-                    else:
-                        st.dataframe(user_reservations)
-                except Exception as e:
-                    logger.error(f"예약 조회 중 오류 발생: {str(e)}")
-                    logger.error(traceback.format_exc())
-                    st.error(f"예약 조회 중 오류가 발생했습니다: {str(e)}")
+            reservation_id_to_cancel = st
 
-            else:
-                st.error("로그인에 실패했습니다. 텔레그램 미니앱을 통해 접속해주세요.")
+        with tab3:
+            st.header("예약 취소")
+            reservation_id_to_cancel = st.text_input("취소할 예약 번호를 입력하세요")
+            if st.button("예약 취소"):
+                try:
+                    reservation_manager.cancel_reservation(
+                        reservation_id_to_cancel,
+                        st.session_state.user_data['id']
+                    )
+                    st.success("예약이 성공적으로 취소되었습니다.")
+                except Exception as e:
+                    st.error(str(e))
+
+        # 기존 예약 조회
+        if st.button("내 예약 조회"):
+            logger.info("기존 예약 조회 버튼 클릭됨")
+            try:
+                user_reservations = reservation_manager.get_user_reservations(st.session_state.user_data['id'])
+                if user_reservations.empty:
+                    logger.warning("예약 정보 없음")
+                    st.warning('예약 정보가 없습니다.')
+                else:
+                    st.dataframe(user_reservations)
+            except Exception as e:
+                logger.error(f"예약 조회 중 오류 발생: {str(e)}")
+                logger.error(traceback.format_exc())
+                st.error(f"예약 조회 중 오류가 발생했습니다: {str(e)}")
+    else:
+        st.error("로그인에 실패했습니다. 텔레그램 미니앱을 통해 접속해주세요.")
 
 if __name__ == "__main__":
     main()
