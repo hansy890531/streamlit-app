@@ -2,83 +2,68 @@ import streamlit as st
 import json
 from streamlit.components.v1 import html
 
-# 사용자 정보를 저장할 공간 생성
+# 페이지 설정
+st.set_page_config(page_title="텔레그램 미니앱 테스트", layout="wide")
+
+# 세션 상태 초기화
 if 'user_data' not in st.session_state:
     st.session_state.user_data = None
 
-# JavaScript 코드 삽입
-html_code = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telegram Web App</title>
+# Telegram WebApp API 스크립트 추가
+html("""
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-        window.onload = function() {
+        function setUserData() {
             let tg = window.Telegram.WebApp;
-            if (tg.initDataUnsafe.user) {
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
                 let userData = {
                     id: tg.initDataUnsafe.user.id,
                     first_name: tg.initDataUnsafe.user.first_name,
                     last_name: tg.initDataUnsafe.user.last_name,
-                    username: tg.initDataUnsafe.user.username,
-                    language_code: tg.initDataUnsafe.user.language_code
+                    username: tg.initDataUnsafe.user.username
                 };
-                console.log(userData);
-                document.getElementById("user-info").innerText = JSON.stringify(userData, null, 2);
-
-                // 사용자 정보를 Streamlit에 전달
+                
+                // Streamlit에 사용자 정보 전달
                 window.parent.postMessage({
-                    type: "userData",
-                    data: userData
+                    type: "streamlit:setComponentValue",
+                    value: JSON.stringify(userData)
                 }, "*");
+                
+                console.log("User data sent:", userData);
             } else {
                 console.error("사용자 정보를 가져올 수 없습니다.");
             }
         }
+
+        if (window.Telegram) {
+            setUserData();
+        } else {
+            window.addEventListener('TelegramWebviewProxyReady', setUserData);
+        }
     </script>
-</head>
-<body>
-    <h1>Welcome to the Telegram Web App</h1>
-    <pre id="user-info"></pre>
-</body>
-</html>
-"""
+""", height=0)
 
-# HTML 코드 삽입
-html(html_code, height=300)
-
-# 사용자 정보 수신
-st.write("사용자 정보를 불러오는 중입니다...")
-
-def on_js_event(event):
-    if event.type == "userData":
-        user_data = event.data
+# 사용자 정보 받기
+user_data_raw = st.experimental_get_query_params().get("streamlit:componentValue")
+if user_data_raw:
+    try:
+        user_data = json.loads(user_data_raw[0])
         st.session_state.user_data = user_data
         st.experimental_rerun()
+    except json.JSONDecodeError:
+        st.error("사용자 데이터 파싱 실패")
 
-# 메시지 리스너 추가
-st.markdown("""
-    <script>
-        window.addEventListener("message", (event) => {
-            if (event.data && event.data.type === "userData") {
-                const userData = event.data.data;
-                console.log("Received user data:", userData);
-                const python_message = {
-                    type: "userData",
-                    data: userData
-                };
-                window.parent.postMessage(python_message, "*");
-            }
-        });
-    </script>
-""")
-
-# 사용자 정보 표시
+# 메인 애플리케이션
 if st.session_state.user_data:
-    st.write("사용자 정보:")
-    st.json(st.session_state.user_data)
+    username = st.session_state.user_data.get('username') or f"{st.session_state.user_data.get('first_name', '')} {st.session_state.user_data.get('last_name', '')}"
+    telegram_id = st.session_state.user_data.get('id')
+    
+    st.title(f"{username}님! 안녕하세요")
+    st.write(f"{username}님의 텔레그램 아이디는 {telegram_id}입니다!")
 else:
-    st.write("사용자 정보를 불러오는 중입니다...")
+    st.error("이 앱은 텔레그램 미니앱을 통해서만 접근할 수 있습니다.")
+    st.info("사용자 데이터를 불러오는 중입니다. 잠시만 기다려주세요...")
+
+# 디버깅을 위한 세션 상태 출력
+st.write("Session State:", st.session_state)
+st.write("Query Params:", st.experimental_get_query_params())
