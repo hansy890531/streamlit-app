@@ -51,7 +51,27 @@ html_code = """
 html(html_code, height=300)
 
 # JavaScript로부터 메시지 수신 및 세션 상태 업데이트
-user_data_raw = st.experimental_get_query_params().get("streamlit:componentValue")
+if st.session_state.user_data is None:
+    # JavaScript로부터 데이터 수신 설정
+    html("""
+    <script>
+        window.addEventListener("message", (event) => {
+            if (event.data.type === "userData") {
+                const userData = event.data.data;
+                console.log("Received user data:", userData);
+                // Streamlit에 사용자 정보 전달
+                const streamlitMessage = {
+                    type: "streamlit:message",
+                    data: JSON.stringify(userData)
+                };
+                parent.postMessage(streamlitMessage, "*");
+            }
+        });
+    </script>
+    """, height=0)
+
+# 사용자 정보 수신 및 세션 상태 업데이트
+user_data_raw = st.experimental_get_query_params().get("streamlit:message")
 if user_data_raw:
     try:
         user_data = json.loads(user_data_raw[0])
