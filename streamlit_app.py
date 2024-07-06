@@ -1,6 +1,5 @@
 import streamlit as st
 import json
-from streamlit.components.v1 import html
 
 # 사용자 정보를 저장할 공간 생성
 if 'user_data' not in st.session_state:
@@ -8,12 +7,6 @@ if 'user_data' not in st.session_state:
 
 # JavaScript 코드 삽입
 html_code = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telegram Web App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         window.onload = function() {
@@ -39,21 +32,15 @@ html_code = """
             }
         };
     </script>
-</head>
-<body>
-    <h1>Welcome to the Telegram Web App</h1>
-    <pre id="user-info"></pre>
-</body>
-</html>
 """
 
 # HTML 코드 삽입
-html(html_code, height=300)
+st.markdown(html_code, unsafe_allow_html=True)
 
 # JavaScript로부터 메시지 수신 및 세션 상태 업데이트
 if st.session_state.user_data is None:
     # JavaScript로부터 데이터 수신 설정
-    html("""
+    st.markdown("""
     <script>
         window.addEventListener("message", (event) => {
             if (event.data.type === "userData") {
@@ -68,7 +55,7 @@ if st.session_state.user_data is None:
             }
         });
     </script>
-    """, height=0)
+    """, unsafe_allow_html=True)
 
 # 사용자 정보 수신 및 세션 상태 업데이트
 user_data_raw = st.experimental_get_query_params().get("streamlit:message")
