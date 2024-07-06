@@ -222,17 +222,31 @@ def main():
                     })
                     
                     html(f"""
-                        <script>
-                            let reservation = {reservation_data};
-                            console.log("Telegram에 전송할 데이터:", reservation);
-                            try {{
-                                window.Telegram.WebApp.sendData(JSON.stringify(reservation));
-                                console.log("Telegram 데이터 전송 성공");
-                            }} catch (error) {{
-                                console.error("Telegram 데이터 전송 실패:", error);
-                            }}
-                            window.Telegram.WebApp.close();
-                        </script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        window.onload = function() {
+            let tg = window.Telegram.WebApp;
+            if (tg.initDataUnsafe.user) {
+                let userData = {
+                    id: tg.initDataUnsafe.user.id,
+                    first_name: tg.initDataUnsafe.user.first_name,
+                    last_name: tg.initDataUnsafe.user.last_name,
+                    username: tg.initDataUnsafe.user.username,
+                    language_code: tg.initDataUnsafe.user.language_code
+                };
+                console.log(userData);
+                document.getElementById("user-info").innerText = JSON.stringify(userData, null, 2);
+
+                // Streamlit에 사용자 정보 전달
+                window.parent.postMessage({
+                    type: "telegramUserData",
+                    value: JSON.stringify(userData)
+                }, "*");
+            } else {
+                console.error("사용자 정보를 가져올 수 없습니다.");
+            }
+        }
+    </script>
                     """, height=0)
                 except Exception as e:
                     st.error(str(e))
