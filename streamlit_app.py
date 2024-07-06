@@ -182,7 +182,9 @@ def main():
             st.session_state.logged_in = False
             logger.warning("사용자 정보를 가져올 수 없습니다.")
 
+    st.session_state.logged_in = True
 
+    
     # 메인 애플리케이션 (로그인 성공 시에만 표시)
     if st.session_state.get('logged_in', False):
         st.title("설명회 예약 시스템")
