@@ -139,29 +139,25 @@ def main():
     html("""
         <script src="https://telegram.org/js/telegram-web-app.js"></script>
         <script>
-            let tg = window.Telegram.WebApp;
-            
-            if (tg.initDataUnsafe.query_id) {
-                tg.expand();
-                
-                // 사용자 정보 가져오기
-                let user = tg.initDataUnsafe.user;
-                let userData = {
-                    id: user.id,
-                    first_name: user.first_name,
-                    last_name: user.last_name,
-                    username: user.username,
-                    language_code: user.language_code
-                };
-                
-                // Streamlit에 사용자 정보 전달
-                window.parent.postMessage({
-                    type: "streamlit:setComponentValue",
-                    value: JSON.stringify(userData)
-                }, "*");
-                
-            } else {
-                console.error("이 앱은 Telegram 내에서만 사용할 수 있습니다.");
+            window.onload = function() {
+                let tg = window.Telegram.WebApp;
+                if (tg.initDataUnsafe.user) {
+                    let userData = {
+                        id: tg.initDataUnsafe.user.id,
+                        first_name: tg.initDataUnsafe.user.first_name,
+                        last_name: tg.initDataUnsafe.user.last_name,
+                        username: tg.initDataUnsafe.user.username,
+                        language_code: tg.initDataUnsafe.user.language_code
+                    };
+                    
+                    // Streamlit에 사용자 정보 전달
+                    window.parent.postMessage({
+                        type: "streamlit:setComponentValue",
+                        value: JSON.stringify(userData)
+                    }, "*");
+                } else {
+                    console.error("사용자 정보를 가져올 수 없습니다.");
+                }
             }
         </script>
     """, height=0)
@@ -171,27 +167,27 @@ def main():
     reservation_manager = ReservationManager(sheets_manager)
 
     # 사용자 정보 받기 및 자동 로그인
-    user_data_raw = st.query_params.get("streamlit:componentValue")
-    if user_data_raw:
-        try:
-            user_data = json.loads(user_data_raw)
-            st.session_state.user_data = user_data
-            user_manager.add_user_if_not_exists(user_data)
-            if user_manager.verify_user(user_data['id']):
-                st.session_state.logged_in = True
-                logger.info(f"사용자 자동 로그인 성공: {user_data.get('username', 'Unknown')}")
-            else:
+    if st.session_state.user_data is None:
+        user_data_raw = st.experimental_get_query_params().get("streamlit:componentValue")
+        if user_data_raw:
+            try:
+                user_data = json.loads(user_data_raw[0])
+                st.session_state.user_data = user_data
+                user_manager.add_user_if_not_exists(user_data)
+                if user_manager.verify_user(user_data['id']):
+                    st.session_state.logged_in = True
+                    logger.info(f"사용자 자동 로그인 성공: {user_data.get('username', 'Unknown')}")
+                else:
+                    st.session_state.logged_in = False
+                    logger.warning(f"未승인 사용자 접근: {user_data.get('username', 'Unknown')}")
+            except json.JSONDecodeError:
+                logger.error("사용자 데이터 파싱 실패")
                 st.session_state.logged_in = False
-                logger.warning(f"未승인 사용자 접근: {user_data.get('username', 'Unknown')}")
-        except json.JSONDecodeError:
-            logger.error("사용자 데이터 파싱 실패")
-            st.session_state.logged_in = False
-    else:
-        if not st.session_state.get('logged_in', False):
+        else:
             logger.warning("사용자 정보를 가져올 수 없습니다.")
 
     # 메인 애플리케이션 (로그인 성공 시에만 표시)
-    if st.session_state.get('logged_in', False):
+    if st.session_state.logged_in:
         st.title("설명회 예약 시스템")
         if st.session_state.user_data:
             st.write(f"환영합니다, {st.session_state.user_data.get('first_name', '')} {st.session_state.user_data.get('last_name', '')}님!")
@@ -230,12 +226,12 @@ def main():
                             let reservation = {reservation_data};
                             console.log("Telegram에 전송할 데이터:", reservation);
                             try {{
-                                tg.sendData(JSON.stringify(reservation));
+                                window.Telegram.WebApp.sendData(JSON.stringify(reservation));
                                 console.log("Telegram 데이터 전송 성공");
                             }} catch (error) {{
                                 console.error("Telegram 데이터 전송 실패:", error);
                             }}
-                            tg.close();
+                            window.Telegram.WebApp.close();
                         </script>
                     """, height=0)
                 except Exception as e:
@@ -289,10 +285,6 @@ def main():
 
         with tab3:
             st.header("예약 취소")
-            reservation_id_to_cancel = st
-
-        with tab3:
-            st.header("예약 취소")
             reservation_id_to_cancel = st.text_input("취소할 예약 번호를 입력하세요")
             if st.button("예약 취소"):
                 try:
@@ -318,8 +310,10 @@ def main():
                 logger.error(f"예약 조회 중 오류 발생: {str(e)}")
                 logger.error(traceback.format_exc())
                 st.error(f"예약 조회 중 오류가 발생했습니다: {str(e)}")
+
     else:
         st.error("로그인에 실패했습니다. 텔레그램 미니앱을 통해 접속해주세요.")
+        logger.error(f"로그인 실패. 세션 상태: {st.session_state}")
 
 if __name__ == "__main__":
     main()
