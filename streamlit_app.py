@@ -32,7 +32,7 @@ html_code = """
                 // 사용자 정보를 Streamlit에 전달
                 window.parent.postMessage({
                     type: "userData",
-                    userData: userData
+                    data: userData
                 }, "*");
             } else {
                 console.error("사용자 정보를 가져올 수 없습니다.");
@@ -51,13 +51,30 @@ html_code = """
 html(html_code, height=300)
 
 # 사용자 정보 수신
-user_data_raw = st.experimental_get_query_params().get("userData")
-if user_data_raw:
-    try:
-        user_data = json.loads(user_data_raw[0])
+st.write("사용자 정보를 불러오는 중입니다...")
+
+def on_js_event(event):
+    if event.type == "userData":
+        user_data = event.data
         st.session_state.user_data = user_data
-    except json.JSONDecodeError:
-        st.error("사용자 데이터를 파싱하는 중 오류가 발생했습니다.")
+        st.experimental_rerun()
+
+# 메시지 리스너 추가
+st.markdown("""
+    <script>
+        window.addEventListener("message", (event) => {
+            if (event.data && event.data.type === "userData") {
+                const userData = event.data.data;
+                console.log("Received user data:", userData);
+                const python_message = {
+                    type: "userData",
+                    data: userData
+                };
+                window.parent.postMessage(python_message, "*");
+            }
+        });
+    </script>
+""")
 
 # 사용자 정보 표시
 if st.session_state.user_data:
