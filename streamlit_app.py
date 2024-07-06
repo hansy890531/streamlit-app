@@ -38,6 +38,15 @@ html_code = """
                 console.error("사용자 정보를 가져올 수 없습니다.");
             }
         }
+
+        window.addEventListener("message", (event) => {
+            if (event.data.type === "userData") {
+                const userData = event.data.data;
+                console.log("Received user data:", userData);
+                // Streamlit에 사용자 정보 전달
+                Streamlit.setComponentValue(JSON.stringify(userData));
+            }
+        });
     </script>
 </head>
 <body>
@@ -49,20 +58,6 @@ html_code = """
 
 # HTML 코드 삽입
 html(html_code, height=300)
-
-# JavaScript로부터 메시지 수신
-st.markdown("""
-<script>
-    window.addEventListener("message", (event) => {
-        if (event.data.type === "userData") {
-            const userData = event.data.data;
-            console.log("Received user data:", userData);
-            // Streamlit에 사용자 정보 전달
-            Streamlit.setComponentValue(JSON.stringify(userData));
-        }
-    });
-</script>
-""")
 
 # 사용자 정보 수신 및 세션 상태 업데이트
 user_data_raw = st.experimental_get_query_params().get("streamlit:componentValue")
