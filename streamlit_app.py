@@ -1,5 +1,6 @@
 import streamlit as st
 from streamlit_javascript import st_javascript
+import json
 
 # 페이지 설정
 st.set_page_config(page_title="텔레그램 미니앱 테스트", layout="wide")
