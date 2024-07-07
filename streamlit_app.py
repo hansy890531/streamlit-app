@@ -10,26 +10,52 @@ if 'user_data' not in st.session_state:
 
 # Telegram WebApp API를 사용하여 사용자 정보 가져오기
 js_code = """
-if (window.Telegram && window.Telegram.WebApp) {
-    var tg = window.Telegram.WebApp;
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        return tg.initDataUnsafe.user;
+try {
+    console.log("Starting JavaScript execution");
+    if (window.Telegram) {
+        console.log("Telegram object exists");
+        if (window.Telegram.WebApp) {
+            console.log("Telegram.WebApp exists");
+            var tg = window.Telegram.WebApp;
+            if (tg.initDataUnsafe) {
+                console.log("initDataUnsafe exists");
+                if (tg.initDataUnsafe.user) {
+                    console.log("User data found");
+                    return JSON.stringify(tg.initDataUnsafe.user);
+                } else {
+                    console.log("No user data in initDataUnsafe");
+                }
+            } else {
+                console.log("No initDataUnsafe");
+            }
+        } else {
+            console.log("No Telegram.WebApp");
+        }
+    } else {
+        console.log("No Telegram object");
     }
+} catch (error) {
+    console.error("Error in JavaScript code:", error);
 }
-return null;
+return JSON.stringify(null);
 """
 
 st.subheader("Executing JavaScript code to get Telegram user data:")
 st.code(js_code)
 
-user_data = st_javascript(js_code)
-st.write("Return value was:", user_data)
+user_data_str = st_javascript(js_code)
+st.write("Raw return value:", user_data_str)
 
-if user_data is not None:
-    st.session_state.user_data = user_data
+try:
+    user_data = json.loads(user_data_str)
+    st.write("Parsed user data:", user_data)
+    if user_data is not None:
+        st.session_state.user_data = user_data
+except json.JSONDecodeError:
+    st.error("Failed to parse user data")
 
 # 메인 애플리케이션
-if st.session_state.user_data:
+if st.session_state.user_data and st.session_state.user_data is not None:
     username = st.session_state.user_data.get('username') or f"{st.session_state.user_data.get('first_name', '')} {st.session_state.user_data.get('last_name', '')}"
     telegram_id = st.session_state.user_data.get('id')
     
