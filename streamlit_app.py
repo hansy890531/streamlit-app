@@ -25,7 +25,7 @@ html_code = """
 js_code = """
 function getUserData() {
     let tg = window.Telegram.WebApp;
-    if (tg.initDataUnsafe.user) {
+    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
         let userData = {
             id: tg.initDataUnsafe.user.id,
             first_name: tg.initDataUnsafe.user.first_name,
@@ -38,10 +38,10 @@ function getUserData() {
         return JSON.stringify(userData);
     } else {
         console.error("사용자 정보를 가져올 수 없습니다.");
-        return null;
+        return JSON.stringify({error: "사용자 정보를 가져올 수 없습니다."});
     }
 }
-getUserData();
+return getUserData();
 """
 
 # HTML 삽입
@@ -51,13 +51,18 @@ st.components.v1.html(html_code, height=300)
 user_data_str = st_javascript(js_code)
 st.write("Raw return value:", user_data_str)
 
-try:
-    user_data = json.loads(user_data_str)
-    st.write("Parsed user data:", user_data)
-    if user_data is not None:
-        st.session_state.user_data = user_data
-except json.JSONDecodeError:
-    st.error("Failed to parse user data")
+if user_data_str:
+    try:
+        user_data = json.loads(user_data_str)
+        st.write("Parsed user data:", user_data)
+        if 'error' not in user_data:
+            st.session_state.user_data = user_data
+        else:
+            st.error(user_data['error'])
+    except json.JSONDecodeError:
+        st.error("Failed to parse user data")
+else:
+    st.error("No data returned from JavaScript")
 
 # 메인 애플리케이션
 if 'user_data' in st.session_state and st.session_state.user_data is not None:
@@ -67,7 +72,7 @@ if 'user_data' in st.session_state and st.session_state.user_data is not None:
     st.title(f"{username}님! 안녕하세요")
     st.write(f"{username}님의 텔레그램 아이디는 {telegram_id}입니다!")
 else:
-    st.error("이 앱은 텔레그램 미니앱을 통해서만 접근할 수 있습니다.")
+    st.warning("이 앱은 텔레그램 미니앱을 통해서만 접근할 수 있습니다.")
     st.info("사용자 데이터를 불러오는 중입니다. 잠시만 기다려주세요...")
 
 # 디버깅을 위한 세션 상태 출력
