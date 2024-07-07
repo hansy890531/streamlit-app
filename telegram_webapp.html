@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Web App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <h1>Telegram Web App</h1>
+    <div id="user-info">사용자 정보 로딩 중...</div>
+
+    <script>
+        function getUserData() {
+            console.log("getUserData 함수 시작");
+            let tg = window.Telegram.WebApp;
+            console.log("Telegram WebApp 객체:", tg);
+            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                console.log("사용자 정보 존재");
+                let userData = {
+                    id: tg.initDataUnsafe.user.id,
+                    first_name: tg.initDataUnsafe.user.first_name,
+                    last_name: tg.initDataUnsafe.user.last_name,
+                    username: tg.initDataUnsafe.user.username,
+                    language_code: tg.initDataUnsafe.user.language_code
+                };
+                console.log("사용자 데이터:", userData);
+                document.getElementById("user-info").innerText = JSON.stringify(userData, null, 2);
+                
+                // 부모 창으로 메시지 전송
+                window.parent.postMessage(JSON.stringify(userData), '*');
+            } else {
+                console.error("사용자 정보를 가져올 수 없습니다.");
+                document.getElementById("user-info").innerText = "사용자 정보를 가져올 수 없습니다.";
+            }
+        }
+
+        window.onload = function() {
+            console.log("window.onload 실행");
+            getUserData();
+        };
+
+        window.Telegram.WebApp.onEvent('viewportChanged', function() {
+            console.log("viewportChanged 이벤트 발생");
+            getUserData();
+        });
+    </script>
+</body>
+</html>
