@@ -31,7 +31,6 @@ user_data = st_javascript(js_code)
 
 if user_data is not None:
     st.session_state.user_data = user_data
-    st.experimental_rerun()
 
 # 메인 애플리케이션
 if st.session_state.user_data:
