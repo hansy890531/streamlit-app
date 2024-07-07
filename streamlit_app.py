@@ -5,45 +5,49 @@ import json
 # 페이지 설정
 st.set_page_config(page_title="텔레그램 미니앱 테스트", layout="wide")
 
-# 세션 상태 초기화
-if 'user_data' not in st.session_state:
-    st.session_state.user_data = None
-
-# Telegram WebApp API를 사용하여 사용자 정보 가져오기
-js_code = """
-try {
-    console.log("Starting JavaScript execution");
-    if (window.Telegram) {
-        console.log("Telegram object exists");
-        if (window.Telegram.WebApp) {
-            console.log("Telegram.WebApp exists");
-            var tg = window.Telegram.WebApp;
-            if (tg.initDataUnsafe) {
-                console.log("initDataUnsafe exists");
-                if (tg.initDataUnsafe.user) {
-                    console.log("User data found");
-                    return JSON.stringify(tg.initDataUnsafe.user);
-                } else {
-                    console.log("No user data in initDataUnsafe");
-                }
-            } else {
-                console.log("No initDataUnsafe");
-            }
-        } else {
-            console.log("No Telegram.WebApp");
-        }
-    } else {
-        console.log("No Telegram object");
-    }
-} catch (error) {
-    console.error("Error in JavaScript code:", error);
-}
-return JSON.stringify(null);
+# HTML 및 JavaScript 코드
+html_code = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Web App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <h1>Welcome to the Telegram Web App</h1>
+    <pre id="user-info"></pre>
+</body>
+</html>
 """
 
-st.subheader("Executing JavaScript code to get Telegram user data:")
-st.code(js_code)
+js_code = """
+function getUserData() {
+    let tg = window.Telegram.WebApp;
+    if (tg.initDataUnsafe.user) {
+        let userData = {
+            id: tg.initDataUnsafe.user.id,
+            first_name: tg.initDataUnsafe.user.first_name,
+            last_name: tg.initDataUnsafe.user.last_name,
+            username: tg.initDataUnsafe.user.username,
+            language_code: tg.initDataUnsafe.user.language_code
+        };
+        console.log(userData);
+        document.getElementById("user-info").innerText = JSON.stringify(userData, null, 2);
+        return JSON.stringify(userData);
+    } else {
+        console.error("사용자 정보를 가져올 수 없습니다.");
+        return null;
+    }
+}
+getUserData();
+"""
 
+# HTML 삽입
+st.components.v1.html(html_code, height=300)
+
+# JavaScript 실행 및 결과 가져오기
 user_data_str = st_javascript(js_code)
 st.write("Raw return value:", user_data_str)
 
@@ -56,7 +60,7 @@ except json.JSONDecodeError:
     st.error("Failed to parse user data")
 
 # 메인 애플리케이션
-if st.session_state.user_data and st.session_state.user_data is not None:
+if 'user_data' in st.session_state and st.session_state.user_data is not None:
     username = st.session_state.user_data.get('username') or f"{st.session_state.user_data.get('first_name', '')} {st.session_state.user_data.get('last_name', '')}"
     telegram_id = st.session_state.user_data.get('id')
     
