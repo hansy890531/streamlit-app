@@ -1,5 +1,4 @@
 import streamlit as st
-import json
 from streamlit_javascript import st_javascript
 
 # 페이지 설정
@@ -14,20 +13,17 @@ js_code = """
 if (window.Telegram && window.Telegram.WebApp) {
     var tg = window.Telegram.WebApp;
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        var user = tg.initDataUnsafe.user;
-        return {
-            id: user.id,
-            first_name: user.first_name,
-            last_name: user.last_name,
-            username: user.username,
-            language_code: user.language_code
-        };
+        return tg.initDataUnsafe.user;
     }
 }
 return null;
 """
 
+st.subheader("Executing JavaScript code to get Telegram user data:")
+st.code(js_code)
+
 user_data = st_javascript(js_code)
+st.write("Return value was:", user_data)
 
 if user_data is not None:
     st.session_state.user_data = user_data
