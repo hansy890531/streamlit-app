@@ -26,10 +26,10 @@ telegram_script = """
                     language_code: tg.initDataUnsafe.user.language_code
                 };
                 console.log(userData);
-                window.parent.postMessage(userData, '*');  // 부모 창으로 데이터 전송
+                window.parent.parent.postMessage(userData, '*');  // 부모 창으로 데이터 전송
             } else {
                 console.log('No user data available');
-                window.parent.postMessage('No user data available', '*');
+                window.parent.parent.postMessage('No user data available', '*');
             }
         }
         window.onload = getUserData;
