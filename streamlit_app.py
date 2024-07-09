@@ -1,8 +1,7 @@
 import streamlit as st
-import streamlit.components.v1 as components
 from streamlit_js_eval import streamlit_js_eval
 
-# HTML 코드 작성 및 렌더링
+# HTML 코드 작성 및 st.markdown 사용
 html_code = """
 <!DOCTYPE html>
 <html>
@@ -10,9 +9,11 @@ html_code = """
     <title>Telegram WebApp</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-        window.onload = function() {
+        function onTelegramReady() {
             Telegram.WebApp.ready();
-        };
+        }
+
+        window.onload = onTelegramReady;
     </script>
 </head>
 <body>
@@ -20,7 +21,8 @@ html_code = """
 </body>
 </html>
 """
-components.html(html_code)
+
+st.markdown(html_code, unsafe_allow_html=True)
 
 # JavaScript 코드 작성
 js_code = """
