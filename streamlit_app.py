@@ -37,7 +37,7 @@ function getUserData() {
             language_code: tg.initDataUnsafe.user.language_code
         };
         console.log(userData);
-        return userData;
+        return JSON.stringify(userData);  // JSON 문자열로 변환하여 반환
     }
     return 'No user data available';
 }
@@ -48,7 +48,10 @@ getUserData();
 result = streamlit_js_eval(js_expressions=js_code, want_output=True, key='js_eval')
 
 def disp_result():
-    st.write("Telegram 사용자 정보: ", result)
+    if result:
+        st.write("Telegram 사용자 정보: ", result)
+    else:
+        st.write("사용자 정보를 가져올 수 없습니다.")
 
 # 버튼을 클릭할 때 JavaScript 결과를 표시
 st.button("Telegram 사용자 정보 표시", on_click=disp_result)
