@@ -63,5 +63,6 @@ if st.button("뒤로가기"):
         if (window.Telegram && window.Telegram.WebApp) {
             window.Telegram.WebApp.close();
         }
-        """
+        """,
+        key="telegram_close"
     )
