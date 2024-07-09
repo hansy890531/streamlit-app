@@ -2,28 +2,25 @@ import streamlit as st
 import streamlit.components.v1 as components
 from streamlit_js_eval import streamlit_js_eval
 
-# Telegram Web App JavaScript를 로드하는 HTML 코드
-telegram_script = """
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script>
-    if (window.Telegram && window.Telegram.WebApp) {
-        console.log("Telegram Web App script loaded successfully");
-    } else {
-        console.log("Failed to load Telegram Web App script");
-    }
-</script>
+# HTML 코드 작성 및 components.html 사용
+html_code = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Telegram WebApp</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <h1>Telegram WebApp</h1>
+</body>
+</html>
 """
+components.html(html_code)
 
-# HTML 컴포넌트를 사용하여 스크립트 삽입
-components.html(telegram_script, height=0)
-
-# 나머지 Streamlit 앱 코드
-st.title("Telegram Web App 통합")
-st.write("Telegram Web App 스크립트가 로드되었습니다.")
-
-
+# 사용자 정보를 가져오는 JavaScript 코드
 js_code = """
 function getUserData() {
+    Telegram.WebApp.ready();
     let tg = window.Telegram.WebApp;
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
         let userData = {
@@ -34,7 +31,7 @@ function getUserData() {
             language_code: tg.initDataUnsafe.user.language_code
         };
         console.log(userData);
-        return JSON.stringify(userData);  // JSON 문자열로 변환하여 반환
+        return JSON.stringify(userData);
     }
     return 'No user data available';
 }
