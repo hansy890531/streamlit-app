@@ -9,12 +9,14 @@ html_code = """
 <head>
     <title>Telegram WebApp</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        window.onload = function() {
+            Telegram.WebApp.ready();
+        };
+    </script>
 </head>
 <body>
     <h1>Telegram WebApp</h1>
-    <script>
-        Telegram.WebApp.ready();
-    </script>
 </body>
 </html>
 """
@@ -41,7 +43,7 @@ getUserData();
 """
 
 # streamlit_js_eval을 사용하여 JavaScript 코드 실행 및 결과 받기
-result = streamlit_js_eval(js_expressions=js_code, want_output=True, key='telegram_user')
+result = streamlit_js_eval(js_expressions=js_code, want_output=True, key='js_eval')
 
 def disp_result():
     st.write("Telegram 사용자 정보: ", result)
