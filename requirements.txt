@@ -1,2 +1,2 @@
 streamlit
-python-telegram-bot==20.3
+streamlit-js-eval
