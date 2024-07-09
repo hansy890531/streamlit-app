@@ -1,31 +1,33 @@
 import streamlit as st
+import streamlit.components.v1 as components
 from streamlit_js_eval import streamlit_js_eval
 
-# HTML 코드 작성 및 st.markdown 사용
+# HTML 코드 작성 및 components.html 사용
 html_code = """
 <!DOCTYPE html>
 <html>
 <head>
     <title>Telegram WebApp</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script>
-        function onTelegramReady() {
-            Telegram.WebApp.ready();
-        }
-
-        window.onload = onTelegramReady;
-    </script>
 </head>
 <body>
     <h1>Telegram WebApp</h1>
 </body>
 </html>
 """
+components.html(html_code)
 
-st.markdown(html_code, unsafe_allow_html=True)
+# JavaScript 코드 작성 및 실행
+js_ready_code = """
+function onTelegramReady() {
+    Telegram.WebApp.ready();
+}
+window.onload = onTelegramReady;
+"""
+streamlit_js_eval(js_expressions=js_ready_code, want_output=False, key='js_eval1')
 
-# JavaScript 코드 작성
-js_code = """
+# 사용자 정보를 가져오는 JavaScript 코드
+js_user_data_code = """
 function getUserData() {
     let tg = window.Telegram.WebApp;
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
@@ -37,7 +39,7 @@ function getUserData() {
             language_code: tg.initDataUnsafe.user.language_code
         };
         console.log(userData);
-        return JSON.stringify(userData);  // JSON 문자열로 변환하여 반환
+        return JSON.stringify(userData);
     }
     return 'No user data available';
 }
@@ -45,7 +47,7 @@ getUserData();
 """
 
 # streamlit_js_eval을 사용하여 JavaScript 코드 실행 및 결과 받기
-result = streamlit_js_eval(js_expressions=js_code, want_output=True, key='js_eval')
+result = streamlit_js_eval(js_expressions=js_user_data_code, want_output=True, key='js_eval2')
 
 def disp_result():
     if result:
