@@ -17,7 +17,7 @@ html_code = """
 """
 components.html(html_code)
 
-# 사용자 정보를 가져오는 JavaScript 코드
+# JavaScript 코드 작성
 js_code = """
 function getUserData() {
     Telegram.WebApp.ready();
@@ -31,9 +31,11 @@ function getUserData() {
             language_code: tg.initDataUnsafe.user.language_code
         };
         console.log(userData);
-        return JSON.stringify(userData);
+        window.parent.postMessage(userData, '*');  // 부모 창으로 데이터 전송
+    } else {
+        console.log('No user data available');
+        window.parent.postMessage('No user data available', '*');
     }
-    return 'No user data available';
 }
 getUserData();
 """
@@ -41,11 +43,26 @@ getUserData();
 # streamlit_js_eval을 사용하여 JavaScript 코드 실행 및 결과 받기
 result = streamlit_js_eval(js_expressions=js_code, want_output=True, key='js_eval2')
 
+# JavaScript 결과를 받을 HTML 및 JavaScript 코드 삽입
+html_code_for_result = """
+<script>
+window.addEventListener("message", (event) => {
+    const userData = event.data;
+    const userInfoElement = document.getElementById("user-info");
+    if (typeof userData === 'string') {
+        userInfoElement.textContent = userData;
+    } else {
+        userInfoElement.textContent = JSON.stringify(userData, null, 2);
+    }
+});
+</script>
+<div id="user-info">사용자 정보가 여기에 표시됩니다.</div>
+"""
+components.html(html_code_for_result, height=200)
+
 def disp_result():
-    if result:
-        st.write("Telegram 사용자 정보: ", result)
-    else:
-        st.write("사용자 정보를 가져올 수 없습니다.")
+    # 결과가 이미 표시될 것이므로 이 함수는 필요 없음
+    pass
 
 # 버튼을 클릭할 때 JavaScript 결과를 표시
 st.button("Telegram 사용자 정보 표시", on_click=disp_result)
