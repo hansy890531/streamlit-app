@@ -122,7 +122,3 @@ def get_user_info(init_data):
     except Exception as e:
         print(f"Error parsing user info: {e}")
         return None
-
-# requirements.txt
-streamlit==1.22.0
-python-telegram-bot==20.3
