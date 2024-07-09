@@ -31,15 +31,10 @@ js_user_data_code = """
 function getUserData() {
     let tg = window.Telegram.WebApp;
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        let userData = {
-            id: tg.initDataUnsafe.user.id,
-            first_name: tg.initDataUnsafe.user.first_name,
-            last_name: tg.initDataUnsafe.user.last_name,
-            username: tg.initDataUnsafe.user.username,
-            language_code: tg.initDataUnsafe.user.language_code
-        };
+        let userData = tg.initDataUnsafe.user.id
+
         console.log(userData);
-        return JSON.stringify(userData);
+        return userData;
     }
     return 'No user data available';
 }
