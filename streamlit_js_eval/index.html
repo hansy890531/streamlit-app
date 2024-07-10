@@ -1,7 +1,7 @@
 <html>
   <body>
+    <!-- Set up your HTML here -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
     <script>
       // Helper functions
       function setCookie(cname, cvalue, exdays) {
@@ -129,7 +129,46 @@
         }
       }
 
-      
+   //--------------------------------------------------------
+  // written by GPT.
+function postEvent(eventType, callback, eventData) {
+  if (!callback) {
+    callback = function () {};
+  }
+  if (eventData === undefined) {
+    eventData = '';
+  }
+  console.log('[Telegram.WebView] > postEvent', eventType, eventData);
+
+  if (window.TelegramWebviewProxy !== undefined) {
+    TelegramWebviewProxy.postEvent(eventType, JSON.stringify(eventData));
+    callback();
+  }
+  else if (window.external && 'notify' in window.external) {
+    window.external.notify(JSON.stringify({eventType: eventType, eventData: eventData}));
+    callback();
+  }
+  else if (isIframe) {
+    try {
+      var trustedTarget = 'https://web.telegram.org';
+      // For now we don't restrict target, for testing purposes
+      trustedTarget = '*';
+      // 여기서 변경되었습니다.
+      if (window.parent !== window.top) {
+        window.parent.parent.postMessage(JSON.stringify({eventType: eventType, eventData: eventData}), trustedTarget);
+      } else {
+        window.parent.postMessage(JSON.stringify({eventType: eventType, eventData: eventData}), trustedTarget);
+      }
+      callback();
+    } catch (e) {
+      callback(e);
+    }
+  }
+  else {
+    callback({notAvailable: true});
+  }
+};
+   
 
       
       
