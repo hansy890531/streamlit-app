@@ -32,7 +32,7 @@ get_user_data_js_code = """
 # Streamlit 앱의 내용
 st.title("Telegram Web App Integration with Streamlit")
 st.write("This is an example of integrating Telegram Web App JS with Streamlit.")
-st.wriite("야심찬 신작입니다.")
+st.write("야심찬 신작입니다.")
 
 # 유저 정보를 표시할 HTML 영역 추가
 st.markdown('<div id="user-info" style="white-space: pre-wrap; border: 1px solid #ddd; padding: 10px; border-radius: 5px;"></div>', unsafe_allow_html=True)
