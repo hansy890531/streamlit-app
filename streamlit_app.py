@@ -26,8 +26,7 @@ document.head.insertAdjacentHTML("beforeEnd", `
 `);
 """
 
-# JavaScript 코드 실행
-import_telegram = streamlit_js_eval(js_expressions=js_code, want_output=False, key='import_telegram')
+
 
 # Streamlit 앱의 내용
 st.title("Telegram Web App Integration with Streamlit")
@@ -35,3 +34,8 @@ st.write("This is an example of integrating Telegram Web App JS with Streamlit."
 
 # 유저 정보를 표시할 HTML 영역 추가
 st.markdown('<div id="user-info" style="white-space: pre-wrap; border: 1px solid #ddd; padding: 10px; border-radius: 5px;"></div>', unsafe_allow_html=True)
+
+
+
+# JavaScript 코드 실행
+import_telegram = streamlit_js_eval(js_expressions=js_code, want_output=False, key='import_telegram')
