@@ -7,12 +7,14 @@ document.head.insertAdjacentHTML("beforeEnd", '<script src="https://telegram.org
 """
 
 get_user_data_js_code = """
-const tg = window.Telegram.WebApp;
-if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-    return tg.initDataUnsafe.user.id;
-} else {
-    return "No user data available.";
-}
+(function() {
+    const tg = window.Telegram.WebApp;
+    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        return tg.initDataUnsafe.user.id;
+    } else {
+        return "No user data available.";
+    }
+})();
 """
 
 # Streamlit 앱의 내용
@@ -32,7 +34,5 @@ elif user_id == "No user data available.":
 else:
     st.write(f"User ID: {user_id}")
 
-
-
-result = streamlit_js_eval(js_expressions='2+3', want_output = True, key='do_sum')
+result = streamlit_js_eval(js_expressions='2+3', want_output=True, key='do_sum')
 st.write(result)
