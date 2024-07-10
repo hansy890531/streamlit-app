@@ -59,6 +59,9 @@ window.addEventListener("message", (event) => {
 # 메시지 수신을 위한 HTML 삽입
 html(js_message_handler, height=0)
 
+# Streamlit의 이벤트로부터 user_id 값을 받아 처리
+user_id = st.experimental_get_query_params().get("user_id", [None])[0]
+
 # user_id 값을 확인하여 적절한 메시지 표시
 if user_id is None:
     st.write("JavaScript execution returned None.")
