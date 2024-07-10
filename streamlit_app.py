@@ -1,43 +1,74 @@
 import streamlit as st
 from streamlit_javascript import st_javascript
 
-# Streamlit 앱의 내용
-st.title("Telegram Web App Integration with Streamlit")
-st.write("This is an example of integrating Telegram Web App JS with Streamlit.")
-st.write("야심찬 신작입니다.")
-
-# JavaScript 코드 삽입 및 실행
-js_code = """
-// Head 태그에 스크립트 삽입
-document.head.insertAdjacentHTML("beforeEnd", '<script src="https://telegram.org/js/telegram-web-app.js"></script>');
-
-function getUserId() {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            const tg = window.Telegram.WebApp;
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                resolve(tg.initDataUnsafe.user.id);
+# HTML 코드 정의
+html_code = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Web App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        window.onload = function() {
+            let tg = window.Telegram.WebApp;
+            if (tg.initDataUnsafe.user) {
+                let userData = {
+                    id: tg.initDataUnsafe.user.id,
+                    first_name: tg.initDataUnsafe.user.first_name,
+                    last_name: tg.initDataUnsafe.user.last_name,
+                    username: tg.initDataUnsafe.user.username,
+                    language_code: tg.initDataUnsafe.user.language_code
+                };
+                console.log(userData);
+                document.getElementById("user-info").innerText = JSON.stringify(userData, null, 2);
+                window.parent.postMessage({ user_id: userData.id }, "*");
             } else {
-                resolve("No user data available.");
+                console.error("사용자 정보를 가져올 수 없습니다.");
+                window.parent.postMessage({ user_id: "No user data available." }, "*");
             }
-        }, 1000); // 스크립트 로드를 기다리기 위해 1초 지연
-    });
-}
-
-getUserId();
+        }
+    </script>
+</head>
+<body>
+    <h1>Welcome to the Telegram Web App</h1>
+    <pre id="user-info"></pre>
+</body>
+</html>
 """
 
-# JavaScript 코드 실행 및 결과 반환
-user_id = st_javascript(js_code)
+# Streamlit 앱에 HTML 삽입
+components.html(html_code, height=400)
 
-# user_id 값을 확인하여 적절한 메시지 표시
-if user_id is None:
-    st.write("JavaScript execution returned None.")
-elif user_id == "No user data available.":
-    st.write(user_id)
-else:
-    st.write(f"User ID: {user_id}")
+# JavaScript에서 보낸 메시지를 수신하기 위한 콜백 함수 정의
+def handle_js_message(message):
+    if "user_id" in message:
+        st.write(f"User ID: {message['user_id']}")
+    else:
+        st.write("No user data available.")
 
-# 간단한 수학 연산 예제
-result = st_javascript('2 + 3')
-st.write(f"2 + 3 = {result}")
+# JavaScript에서 메시지를 수신
+st_js_message = """
+<script>
+window.addEventListener("message", (event) => {
+    const data = event.data;
+    if (data && data.user_id !== undefined) {
+        Streamlit.setComponentValue(data);
+    }
+});
+</script>
+"""
+
+# HTML 삽입을 통해 JS 메시지 수신 설정
+components.html(st_js_message, height=0)
+st.experimental_set_query_params(js_message=handle_js_message)
+
+# 페이지 새로고침 버튼 추가
+if st.button("Reload Page"):
+    js_code_reload = """
+    <script>
+    window.parent.postMessage({type: "reload"}, "*");
+    </script>
+    """
+    components.html(js_code_reload, height=0)
