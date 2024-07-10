@@ -1,12 +1,7 @@
 import streamlit as st
-import streamlit.components.v1 as components
+from streamlit_javascript import st_javascript
 
-# Streamlit 앱의 내용
-st.title("Telegram Web App Integration with Streamlit")
-st.write("This is an example of integrating Telegram Web App JS with Streamlit.")
-st.write("야심찬 신작입니다.")
-
-# HTML 및 JavaScript 코드 삽입
+# HTML 구조를 사용하여 head와 body에 스크립트를 삽입
 html_code = """
 <!DOCTYPE html>
 <html lang="en">
@@ -15,26 +10,27 @@ html_code = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Telegram Web App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script>
-        function sendUserIdToStreamlit() {
-            const tg = window.Telegram.WebApp;
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                const userId = tg.initDataUnsafe.user.id;
-                const streamlitMessage = { "user_id": userId };
-                window.parent.postMessage(streamlitMessage, "*");
-            } else {
-                const streamlitMessage = { "user_id": "No user data available." };
-                window.parent.postMessage(streamlitMessage, "*");
-            }
-        }
-        window.onload = function() {
-            sendUserIdToStreamlit();
-        }
-    </script>
 </head>
 <body>
     <h1>Welcome to the Telegram Web App</h1>
     <pre id="user-info">Loading...</pre>
+    <script>
+        function getUserId() {
+            return new Promise((resolve, reject) => {
+                const tg = window.Telegram.WebApp;
+                if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                    resolve(tg.initDataUnsafe.user.id);
+                } else {
+                    resolve("No user data available.");
+                }
+            });
+        }
+        window.onload = async function() {
+            const userId = await getUserId();
+            document.getElementById('user-info').innerText = 'User ID: ' + userId;
+            window.parent.postMessage({ user_id: userId }, "*");
+        }
+    </script>
 </body>
 </html>
 """
@@ -43,9 +39,8 @@ html_code = """
 components.html(html_code, height=400)
 
 # JavaScript에서 보낸 메시지를 수신하기 위한 콜백 함수 정의
-def handle_js_message():
-    message = st.session_state.get("js_message")
-    if message and "user_id" in message:
+def handle_js_message(message):
+    if "user_id" in message:
         st.write(f"User ID: {message['user_id']}")
     else:
         st.write("No user data available.")
@@ -64,12 +59,3 @@ window.addEventListener("message", (event) => {
 
 components.html(st_js_message, height=0)
 st.experimental_set_query_params(js_message=handle_js_message)
-
-# 페이지 새로고침 버튼 추가
-if st.button("Reload Page"):
-    js_code_reload = """
-    <script>
-    window.parent.postMessage({type: "reload"}, "*");
-    </script>
-    """
-    components.html(js_code_reload, height=0)
