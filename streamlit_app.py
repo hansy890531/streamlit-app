@@ -31,3 +31,8 @@ elif user_id == "No user data available.":
     st.write(user_id)
 else:
     st.write(f"User ID: {user_id}")
+
+
+
+result = streamlit_js_eval(js_expressions='2+3', want_output = True, key='do_sum')
+st.write(result)
