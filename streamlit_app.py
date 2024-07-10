@@ -1,10 +1,8 @@
 import streamlit as st
 from streamlit.components.v1 import html
-from streamlit_javascript import st_javascript
 
 # Streamlit 앱의 내용
 st.title("Telegram Web App Integration with Streamlit")
-st.write("이 예제는 Streamlit과 Telegram Web App JS를 통합하는 방법을 보여줍니다.")
 
 # HTML 및 JavaScript 코드 삽입
 html_code = """
@@ -17,29 +15,28 @@ html_code = """
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         window.onload = function() {
-            function getUserId() {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        const tg = window.Telegram.WebApp;
-                        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                            resolve(tg.initDataUnsafe.user.id);
-                        } else {
-                            resolve("No user data available.");
-                        }
-                    }, 1000); // 스크립트가 로드될 시간을 기다리기 위해 1초 대기
-                });
+            let tg = window.Telegram.WebApp;
+            if (tg.initDataUnsafe.user) {
+                let userData = {
+                    id: tg.initDataUnsafe.user.id,
+                    first_name: tg.initDataUnsafe.user.first_name,
+                    last_name: tg.initDataUnsafe.user.last_name,
+                    username: tg.initDataUnsafe.user.username,
+                    language_code: tg.initDataUnsafe.user.language_code
+                };
+                console.log(userData);
+                document.getElementById("user-info").innerText = JSON.stringify(userData, null, 2);
+                window.parent.postMessage({ user_id: userData.id }, "*");
+            } else {
+                console.error("사용자 정보를 가져올 수 없습니다.");
+                window.parent.postMessage({ user_id: "No user data available." }, "*");
             }
-
-            getUserId().then(userId => {
-                document.getElementById("user-info").innerText = 'User ID: ' + userId;
-                window.parent.postMessage({ user_id: userId }, "*");
-            });
         }
     </script>
 </head>
 <body>
     <h1>Welcome to the Telegram Web App</h1>
-    <pre id="user-info">Loading...</pre>
+    <pre id="user-info"></pre>
 </body>
 </html>
 """
