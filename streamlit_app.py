@@ -3,18 +3,25 @@ from streamlit_js_eval import streamlit_js_eval
 
 # Telegram 웹앱 JavaScript 파일을 head에 삽입하는 코드
 js_code_import = """
-document.head.insertAdjacentHTML("beforeEnd", '<script src="https://telegram.org/js/telegram-web-app.js"></script>');
+const script = document.createElement('script');
+script.src = "https://telegram.org/js/telegram-web-app.js";
+script.onload = function() {
+    window.TelegramLoaded = true;
+};
+document.head.appendChild(script);
 """
 
 get_user_data_js_code = """
-(function() {
+if (window.TelegramLoaded) {
     const tg = window.Telegram.WebApp;
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         return tg.initDataUnsafe.user.id;
     } else {
         return "No user data available.";
     }
-})();
+} else {
+    return "Telegram script not loaded yet.";
+}
 """
 
 # Streamlit 앱의 내용
@@ -30,6 +37,8 @@ user_id = streamlit_js_eval(js_expressions=get_user_data_js_code, want_output=Tr
 if user_id is None:
     st.write("JavaScript execution returned None.")
 elif user_id == "No user data available.":
+    st.write(user_id)
+elif user_id == "Telegram script not loaded yet.":
     st.write(user_id)
 else:
     st.write(f"User ID: {user_id}")
