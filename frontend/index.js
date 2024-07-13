@@ -37,8 +37,10 @@ window.onload = function() {
         };
         console.log(userData);
         document.getElementById("user-info").innerText = JSON.stringify(userData, null, 2);
+        onTelegramUserDataReceived(userData); // userData 객체를 전달
     } else {
         console.error("사용자 정보를 가져올 수 없습니다.");
     }
 }
+
 onTelegramUserDataReceived(UserData);
