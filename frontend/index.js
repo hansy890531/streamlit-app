@@ -17,11 +17,7 @@ function onTelegramUserDataReceived(userData) {
     sendUserDataToStreamlit(userData);
 }
 
-Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, onDataFromPython);
-Streamlit.setComponentReady();
-Streamlit.setFrameHeight(500);
-
-window.onload = function() {
+function getUserId() {
     const tg = window.Telegram.WebApp;
     if (tg.initDataUnsafe.user) {
         const userData = {
@@ -31,10 +27,15 @@ window.onload = function() {
             username: tg.initDataUnsafe.user.username,
             language_code: tg.initDataUnsafe.user.language_code
         };
-        console.log(userData);
         document.getElementById("user-info").innerText = JSON.stringify(userData, null, 2);
         onTelegramUserDataReceived(userData); // userData 객체를 전달
     } else {
         console.error("사용자 정보를 가져올 수 없습니다.");
     }
 }
+
+
+Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, onDataFromPython);
+Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, getUserId)
+Streamlit.setComponentReady();
+Streamlit.setFrameHeight(500);
