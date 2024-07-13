@@ -21,10 +21,6 @@ Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, onDataFromPython);
 Streamlit.setComponentReady();
 Streamlit.setFrameHeight(500);
 
-// Example of how you might receive data from Telegram Web App
-// Replace this with actual Telegram Web App data retrieval logic
-
-
 window.onload = function() {
     const tg = window.Telegram.WebApp;
     if (tg.initDataUnsafe.user) {
@@ -42,5 +38,3 @@ window.onload = function() {
         console.error("사용자 정보를 가져올 수 없습니다.");
     }
 }
-
-onTelegramUserDataReceived(UserData);
