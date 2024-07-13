@@ -29,13 +29,18 @@ function getUserId() {
         };
         document.getElementById("user-info").innerText = JSON.stringify(userData, null, 2);
         onTelegramUserDataReceived(userData); // userData 객체를 전달
+        return userData; // userData 객체 반환
     } else {
         console.error("사용자 정보를 가져올 수 없습니다.");
     }
 }
 
-
 Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, onDataFromPython);
-Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, getUserId)
+Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, () => {
+    const userData = getUserId();
+    if (userData) {
+        Streamlit.setComponentValue(userData);
+    }
+});
 Streamlit.setComponentReady();
 Streamlit.setFrameHeight(500);
